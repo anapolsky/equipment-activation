@@ -22,11 +22,13 @@ class TestEquipmentActivation(unittest.TestCase):
 
         response = requests.post(url, json=payload, verify=False)
         self.assertEqual(response.status_code, 200)
+
         data = response.json()
         self.assertIn("taskID", data)
-        task_id = data["taskID"]
 
+        task_id = data["taskID"]
         status_url = url + "/task/" + task_id
+
         for _ in range(70):
             status_response = requests.get(status_url, verify=False)
             if status_response.status_code == 200:
@@ -38,8 +40,8 @@ class TestEquipmentActivation(unittest.TestCase):
             self.fail("Task did not complete in expected time.")
 
     def test_invalid_equipment_id(self):
-        invalid_id = "ABC"
-        url = SERVICE_B_URL + invalid_id
+        invalid_equipment_id = "ABC"
+        url = SERVICE_B_URL + invalid_equipment_id
         payload = {
             "timeoutInSeconds": 14,
             "parameters": {"username": "admin", "password": "admin", "vlan": 534, "interfaces": [1, 2, 3, 4]},
@@ -50,8 +52,9 @@ class TestEquipmentActivation(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
         # GET task status for invalid equipment ID should also return 404
-        task_id = "non-existent"
-        response = requests.get(url + "/task/" + task_id, verify=False)
+        non_existent_task_id = "non-existent-task-id"
+        status_url = url + "/task/" + non_existent_task_id
+        response = requests.get(status_url, verify=False)
         self.assertEqual(response.status_code, 404)
 
     def test_missing_payload(self):
@@ -61,12 +64,12 @@ class TestEquipmentActivation(unittest.TestCase):
         response = requests.post(url, json={}, verify=False)
         self.assertEqual(response.status_code, 400)
 
-    def test_non_existent_task(self):
+    def test_non_existent_task_id(self):
         # Valid equipment ID but the task ID does not exist
         equipment_id = "ABCDEF"
-        non_existent_task = "non-existent-task"
-        url = SERVICE_B_URL + equipment_id + "/task/" + non_existent_task
-        response = requests.get(url, verify=False)
+        non_existent_task_id = "non-existent-task-id"
+        status_url = SERVICE_B_URL + equipment_id + "/task/" + non_existent_task_id
+        response = requests.get(status_url, verify=False)
         self.assertEqual(response.status_code, 404)
 
     def test_concurrent_tasks(self):

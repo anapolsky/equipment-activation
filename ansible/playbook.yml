@@ -37,7 +37,7 @@
         dest: /opt/project/docker-compose.yml
         mode: '0644'
 
-    - name: Start the services using Docker Compose
+    - name: Build and start the services using Docker Compose
       command: docker-compose up --detach --build
       args:
         chdir: /opt/project

@@ -14,7 +14,6 @@ def configure_equipment(equipment_id):
         return jsonify({"code": 404, "message": "The requested equipment is not found"}), 404
 
     data = request.get_json()
-
     if not data or "timeoutInSeconds" not in data or "parameters" not in data:
         return jsonify({"code": 400, "message": "Bad Request"}), 400
 

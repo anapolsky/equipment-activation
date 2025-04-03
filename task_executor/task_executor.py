@@ -14,6 +14,19 @@ SERVICE_A_URL = "https://service_a:5001/api/v1/equipment/cpe/"
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def publish_result(result):
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host=RABBITMQ_HOST, connection_attempts=10, retry_delay=5)
+    )
+    channel = connection.channel()
+    channel.queue_declare(queue=RESULT_QUEUE, durable=True)
+    message = json.dumps(result)
+    channel.basic_publish(
+        exchange="", routing_key=RESULT_QUEUE, body=message, properties=pika.BasicProperties(delivery_mode=2)
+    )
+    connection.close()
+
+
 def process_task(channel, method, properties, body):
     task = None
     try:
@@ -24,6 +37,7 @@ def process_task(channel, method, properties, body):
         url = SERVICE_A_URL + equipment_id
 
         response = requests.post(url, json=parameters, verify=False, timeout=parameters.get("timeoutInSeconds", 14))
+
         if response.status_code == 200:
             result = {"taskID": task_id, "status": "completed", "result": response.json()}
         else:
@@ -38,19 +52,6 @@ def process_task(channel, method, properties, body):
 
     publish_result(result)
     channel.basic_ack(delivery_tag=method.delivery_tag)
-
-
-def publish_result(result):
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=RABBITMQ_HOST, connection_attempts=10, retry_delay=5)
-    )
-    channel = connection.channel()
-    channel.queue_declare(queue=RESULT_QUEUE, durable=True)
-    message = json.dumps(result)
-    channel.basic_publish(
-        exchange="", routing_key=RESULT_QUEUE, body=message, properties=pika.BasicProperties(delivery_mode=2)
-    )
-    connection.close()
 
 
 def worker():

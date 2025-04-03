@@ -32,7 +32,7 @@ def publish_task(task):
     connection.close()
 
 
-def result_consumer():
+def consume_result():
     def callback(c, method, properties, body):
         try:
             result = json.loads(body)
@@ -54,7 +54,7 @@ def result_consumer():
     channel.start_consuming()
 
 
-t = threading.Thread(target=result_consumer)
+t = threading.Thread(target=consume_result)
 t.daemon = True
 t.start()
 
