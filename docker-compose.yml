@@ -1,0 +1,29 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  service_a:
+    build: ./service_a
+    ports:
+      - "5001:5001"
+    depends_on:
+      - rabbitmq
+
+  service_b:
+    build: ./service_b
+    ports:
+      - "5002:5002"
+    depends_on:
+      - rabbitmq
+
+  task_executor:
+    build: ./task_executor
+    depends_on:
+      - rabbitmq
+      - service_a

@@ -1,0 +1,43 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Docker is installed
+      apt:
+        name: docker.io
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Docker Compose is installed
+      apt:
+        name: docker-compose
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Create project directory
+      file:
+        path: /opt/project
+        state: directory
+        mode: '0755'
+
+    - name: Copy docker-compose.yml file to project directory
+      copy:
+        src: ../docker-compose.yml
+        dest: /opt/project/docker-compose.yml
+        mode: '0644'
+
+    - name: Start the services using Docker Compose
+      command: docker-compose up --detach --build
+      args:
+        chdir: /opt/project
